@@ -301,6 +301,10 @@
             "$OPENAI_API_KEY"
           ]
         },
+        "api_key_command": {
+          "type": "string",
+          "description": "Command to execute to get the API key. This takes precedence over api_key."
+        },
         "disable": {
           "type": "boolean",
           "description": "Whether this provider is disabled",

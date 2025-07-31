@@ -1,6 +1,8 @@
 package config
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -173,6 +175,47 @@ func TestConfig_configureProvidersWithNewProvider(t *testing.T) {
 
 	_, ok := cfg.Providers.Get("openai")
 	require.True(t, ok, "OpenAI provider should still be present")
+}
+
+func TestConfig_configureProvidersWithAPIKeyCommand(t *testing.T) {
+	knownProviders := []catwalk.Provider{
+		{
+			ID:          "openai",
+			APIKey:      "$OPENAI_API_KEY",
+			APIEndpoint: "https://api.openai.com/v1",
+			Models: []catwalk.Model{{
+				ID: "test-model",
+			}},
+		},
+	}
+
+	cmd := "printf 'tok1\ntok2\n' | head -n1"
+	cfg := &Config{
+		Providers: csync.NewMap[string, ProviderConfig](),
+	}
+	cfg.Providers.Set("openai", ProviderConfig{APIKeyCommand: cmd})
+	cfg.setDefaults("/tmp")
+	env := env.NewFromMap(map[string]string{"OPENAI_API_KEY": "ignored"})
+	resolver := NewEnvironmentVariableResolver(env)
+	err := cfg.configureProviders(env, resolver, knownProviders)
+	require.NoError(t, err)
+
+	pc, _ := cfg.Providers.Get("openai")
+	require.Equal(t, fmt.Sprintf("$(%s)", cmd), pc.APIKey)
+
+	var executed string
+	r := &shellVariableResolver{
+		env: env,
+		shell: &mockShell{execFunc: func(ctx context.Context, command string) (string, string, error) {
+			executed = command
+			return "tok1\n", "", nil
+		}},
+	}
+
+	resolved, err := r.ResolveValue(pc.APIKey)
+	require.NoError(t, err)
+	require.Equal(t, "tok1", resolved)
+	require.Equal(t, cmd, executed)
 }
 
 func TestConfig_configureProvidersBedrockWithCredentials(t *testing.T) {
