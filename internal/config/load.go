@@ -105,7 +105,10 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 			if config.BaseURL != "" {
 				p.APIEndpoint = config.BaseURL
 			}
-			if config.APIKey != "" {
+			if config.APIKeyCommand != "" {
+				slog.Debug("Using API key command", "provider", p.ID)
+				p.APIKey = fmt.Sprintf("$(%s)", config.APIKeyCommand)
+			} else if config.APIKey != "" {
 				p.APIKey = config.APIKey
 			}
 			if len(config.Models) > 0 {
@@ -216,6 +219,11 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 	for id, providerConfig := range c.Providers.Seq2() {
 		if knownProviderNames[id] {
 			continue
+		}
+
+		if providerConfig.APIKeyCommand != "" {
+			slog.Debug("Using API key command", "provider", id)
+			providerConfig.APIKey = fmt.Sprintf("$(%s)", providerConfig.APIKeyCommand)
 		}
 
 		// Make sure the provider ID is set
