@@ -4,5 +4,102 @@
     "Go": {
       "command": "gopls"
     }
+  },
+  "providers": {
+    "floodgate": {
+      "type": "openai",
+      "base_url": "https://floodgate.g.apple.com/api/openai/v1",
+      "api_key_command": "/usr/local/bin/appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id' | cut -d' ' -f2 | tr -d '\\n'",
+      "models": [
+        {
+          "id": "aws:anthropic.claude-sonnet-4-20250514-v1:0",
+          "name": "Claude 4 Sonnet",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 200000,
+          "can_reason": true,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "aws:anthropic.claude-opus-4-20250514-v1:0",
+          "name": "Claude 4 Opus",
+          "default_max_tokens": 4096,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 200000,
+          "can_reason": true,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "aws:anthropic.claude-3-5-sonnet-20241022-v2:0",
+          "name": "Claude 3.5 Sonnet (New)",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 200000,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "aws:anthropic.claude-3-5-sonnet-20240620-v1:0",
+          "name": "Claude 3.5 Sonnet",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 200000,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "aws:anthropic.claude-3-5-haiku-20241022-v1:0",
+          "name": "Claude 3.5 Haiku",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 200000,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "aws:anthropic.claude-3-7-sonnet-20250219-v1:0",
+          "name": "Claude 3.7 Sonnet",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 200000,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        }
+      ]
+    }
+  },
+  "models": {
+    "large": {
+      "provider": "floodgate",
+      "model": "aws:anthropic.claude-sonnet-4-20250514-v1:0"
+    },
+    "small": {
+      "provider": "floodgate",
+      "model": "aws:anthropic.claude-3-5-sonnet-20241022-v2:0"
+    }
   }
 }

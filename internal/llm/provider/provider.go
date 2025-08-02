@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/catwalk/pkg/catwalk"
 	"github.com/charmbracelet/crush/internal/config"
@@ -196,9 +197,23 @@ func NewProvider(cfg config.ProviderConfig, opts ...ProviderClientOption) (Provi
 			client:  newAzureClient(clientOptions),
 		}, nil
 	case catwalk.TypeVertexAI:
+		// Check if this is a Floodgate endpoint
+		if strings.Contains(cfg.BaseURL, "floodgate.g.apple.com") {
+			return &baseProvider[*FloodgateClient]{
+				options: clientOptions,
+				client:  newFloodgateClient(clientOptions),
+			}, nil
+		}
 		return &baseProvider[VertexAIClient]{
 			options: clientOptions,
 			client:  newVertexAIClient(clientOptions),
+		}, nil
+	}
+	// Special handling for Floodgate endpoints with OpenAI type (for Anthropic models)
+	if cfg.Type == catwalk.TypeOpenAI && strings.Contains(cfg.BaseURL, "floodgate.g.apple.com") {
+		return &baseProvider[*FloodgateClient]{
+			options: clientOptions,
+			client:  newFloodgateClient(clientOptions),
 		}, nil
 	}
 	return nil, fmt.Errorf("provider not supported: %s", cfg.Type)

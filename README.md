@@ -280,6 +280,37 @@ API. Don't forget to set `DEEPSEEK_API_KEY` in your environment.
 }
 ```
 
+#### Vertex AI/Gemini APIs
+
+Crush now supports Vertex AI providers for Gemini models. Here's an example using Apple's Floodgate proxy:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "providers": {
+    "floodgate-gemini": {
+      "type": "vertexai",
+      "base_url": "https://floodgate.g.apple.com/api/gemini/v1/publishers/google/models",
+      "api_key_command": "/usr/local/bin/appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id' | cut -d' ' -f2 | tr -d '\\n'",
+      "models": [
+        {
+          "id": "gemini-2.5-flash",
+          "name": "Gemini 2.5 Flash",
+          "context_window": 1048576,
+          "default_max_tokens": 8192
+        },
+        {
+          "id": "gemini-2.5-pro", 
+          "name": "Gemini 2.5 Pro",
+          "context_window": 2097152,
+          "default_max_tokens": 8192
+        }
+      ]
+    }
+  }
+}
+```
+
 #### Anthropic-Compatible APIs
 
 Custom Anthropic-compatible providers follow this format:

@@ -203,13 +203,16 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 			}
 		default:
 			// if the provider api or endpoint are missing we skip them
-			v, err := resolver.ResolveValue(p.APIKey)
-			if v == "" || err != nil {
-				if configExists {
-					slog.Warn("Skipping provider due to missing API key", "provider", p.ID)
-					c.Providers.Del(string(p.ID))
+			// Skip validation if this is a command substitution (from APIKeyCommand)
+			if !strings.HasPrefix(p.APIKey, "$(") {
+				v, err := resolver.ResolveValue(p.APIKey)
+				if v == "" || err != nil {
+					if configExists {
+						slog.Warn("Skipping provider due to missing API key", "provider", p.ID)
+						c.Providers.Del(string(p.ID))
+					}
+					continue
 				}
-				continue
 			}
 		}
 		c.Providers.Set(string(p.ID), prepared)
@@ -254,7 +257,8 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 			c.Providers.Del(id)
 			continue
 		}
-		if providerConfig.Type != catwalk.TypeOpenAI && providerConfig.Type != catwalk.TypeAnthropic {
+		if providerConfig.Type != catwalk.TypeOpenAI && providerConfig.Type != catwalk.TypeAnthropic &&
+			providerConfig.Type != catwalk.TypeVertexAI {
 			slog.Warn("Skipping custom provider because the provider type is not supported", "provider", id, "type", providerConfig.Type)
 			c.Providers.Del(id)
 			continue
@@ -262,7 +266,10 @@ func (c *Config) configureProviders(env env.Env, resolver VariableResolver, know
 
 		apiKey, err := resolver.ResolveValue(providerConfig.APIKey)
 		if apiKey == "" || err != nil {
-			slog.Warn("Provider is missing API key, this might be OK for local providers", "provider", id)
+			// Don't warn if this is a command substitution (from APIKeyCommand)
+			if !strings.HasPrefix(providerConfig.APIKey, "$(") {
+				slog.Warn("Provider is missing API key, this might be OK for local providers", "provider", id)
+			}
 		}
 		baseURL, err := resolver.ResolveValue(providerConfig.BaseURL)
 		if baseURL == "" || err != nil {
