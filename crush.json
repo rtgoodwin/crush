@@ -90,6 +90,78 @@
           "supports_attachments": true
         }
       ]
+    },
+    "floodgate-vertex": {
+      "type": "vertexai",
+      "base_url": "https://floodgate.g.apple.com/api/gemini/v1/publishers/google/models",
+      "api_key_command": "/usr/local/bin/appleconnect getToken -C hvys3fcwcteqrvw3qzkvtk86viuoqv --token-type=oauth --interactivity-type=none -E prod -G pkce -o openid,dsid,accountname,profile,groups | grep 'oauth-id' | cut -d' ' -f2 | tr -d '\\n'",
+      "models": [
+        {
+          "id": "gemini-2.5-flash",
+          "name": "Gemini 2.5 Flash",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 1048576,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "gemini-2.5-pro",
+          "name": "Gemini 2.5 Pro",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 2097152,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "gemini-2.0-flash-001",
+          "name": "Gemini 2.0 Flash",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 1048576,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "gemini-1.5-flash",
+          "name": "Gemini 1.5 Flash",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 1048576,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        },
+        {
+          "id": "gemini-1.5-pro",
+          "name": "Gemini 1.5 Pro",
+          "default_max_tokens": 8192,
+          "cost_per_1m_in": 0,
+          "cost_per_1m_out": 0,
+          "cost_per_1m_in_cached": 0,
+          "cost_per_1m_out_cached": 0,
+          "context_window": 2097152,
+          "can_reason": false,
+          "has_reasoning_efforts": false,
+          "supports_attachments": true
+        }
+      ]
     }
   },
   "models": {

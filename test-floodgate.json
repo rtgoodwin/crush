@@ -1,0 +1,33 @@
+{
+  "providers": {
+    "floodgate-claude": {
+      "name": "Floodgate Claude Models",
+      "type": "openai",
+      "base_url": "https://floodgate.g.apple.com/api/openai/v1",
+      "api_key": "dummy-handled-by-auth",
+      "models": [
+        {
+          "id": "aws:anthropic.claude-sonnet-4-20250514-v1:0",
+          "name": "Claude Sonnet 4",
+          "default_max_tokens": 4000,
+          "can_reason": true
+        }
+      ]
+    }
+  },
+  "models": {
+    "large": {
+      "provider": "floodgate-claude",
+      "model": "aws:anthropic.claude-sonnet-4-20250514-v1:0",
+      "max_tokens": 4000
+    },
+    "small": {
+      "provider": "floodgate-claude",
+      "model": "aws:anthropic.claude-sonnet-4-20250514-v1:0",
+      "max_tokens": 2000
+    }
+  },
+  "options": {
+    "debug": true
+  }
+}

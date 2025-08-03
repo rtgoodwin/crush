@@ -1,0 +1,71 @@
+{
+  "providers": {
+    "floodgate-claude": {
+      "name": "Floodgate Claude Models",
+      "type": "openai",
+      "base_url": "https://floodgate.g.apple.com/api/openai/v1",
+      "api_key": "dummy-key-handled-by-auth",
+      "models": [
+        {
+          "id": "aws:anthropic.claude-sonnet-4-20250514-v1:0",
+          "name": "Claude Sonnet 4",
+          "default_max_tokens": 4000,
+          "can_reason": true
+        },
+        {
+          "id": "aws:anthropic.claude-3-5-sonnet-20241022-v2:0", 
+          "name": "Claude 3.5 Sonnet",
+          "default_max_tokens": 4000,
+          "can_reason": false
+        },
+        {
+          "id": "aws:anthropic.claude-3-5-haiku-20241022-v1:0",
+          "name": "Claude 3.5 Haiku",
+          "default_max_tokens": 4000,
+          "can_reason": false
+        }
+      ]
+    },
+    "floodgate-gemini": {
+      "name": "Floodgate Gemini Models",
+      "type": "vertexai",
+      "base_url": "https://floodgate.g.apple.com/api/gemini/v1/publishers/google/models",
+      "api_key": "dummy-key-handled-by-auth",
+      "models": [
+        {
+          "id": "gemini-2.5-flash",
+          "name": "Gemini 2.5 Flash",
+          "default_max_tokens": 8000,
+          "can_reason": false
+        },
+        {
+          "id": "gemini-2.5-pro",
+          "name": "Gemini 2.5 Pro", 
+          "default_max_tokens": 8000,
+          "can_reason": false
+        },
+        {
+          "id": "gemini-1.5-pro",
+          "name": "Gemini 1.5 Pro",
+          "default_max_tokens": 8000,
+          "can_reason": false
+        }
+      ]
+    }
+  },
+  "models": {
+    "large": {
+      "provider": "floodgate-claude",
+      "model": "aws:anthropic.claude-sonnet-4-20250514-v1:0",
+      "max_tokens": 4000
+    },
+    "small": {
+      "provider": "floodgate-gemini", 
+      "model": "gemini-2.5-flash",
+      "max_tokens": 2000
+    }
+  },
+  "options": {
+    "debug": true
+  }
+}

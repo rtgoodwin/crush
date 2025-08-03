@@ -101,7 +101,33 @@ type VertexContent struct {
 }
 
 type VertexPart struct {
-	Text string `json:"text"`
+	Text             string                  `json:"text,omitempty"`
+	FunctionCall     *VertexFunctionCall     `json:"functionCall,omitempty"`
+	FunctionResponse *VertexFunctionResponse `json:"functionResponse,omitempty"`
+}
+
+// VertexTool represents a tool definition for Vertex AI
+type VertexTool struct {
+	FunctionDeclarations []VertexFunctionDeclaration `json:"functionDeclarations"`
+}
+
+// VertexFunctionDeclaration represents a function declaration for Vertex AI
+type VertexFunctionDeclaration struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Parameters  map[string]interface{} `json:"parameters"`
+}
+
+// VertexFunctionCall represents a function call from the model
+type VertexFunctionCall struct {
+	Name string                 `json:"name"`
+	Args map[string]interface{} `json:"args"`
+}
+
+// VertexFunctionResponse represents a function response
+type VertexFunctionResponse struct {
+	Name     string                 `json:"name"`
+	Response map[string]interface{} `json:"response"`
 }
 
 type VertexGenerationConfig struct {
@@ -120,6 +146,7 @@ type VertexChatRequest struct {
 	Contents         []VertexContent         `json:"contents"`
 	GenerationConfig *VertexGenerationConfig `json:"generationConfig,omitempty"`
 	SafetySettings   []VertexSafetySetting   `json:"safetySettings,omitempty"`
+	Tools            []VertexTool            `json:"tools,omitempty"`
 }
 
 type VertexChatResponse struct {
@@ -451,23 +478,50 @@ func (c *FloodgateClient) convertToVertexContents(messages []message.Message) []
 
 		// Convert content parts
 		var textBuilder strings.Builder
+		var hasNonTextParts bool
+
 		for _, part := range msg.Parts {
 			switch p := part.(type) {
 			case message.TextContent:
 				textBuilder.WriteString(p.Text)
 			case message.ToolResult:
-				textBuilder.WriteString(p.Content)
+				// Convert tool result to Vertex AI function response format
+				responseData := map[string]interface{}{
+					"result": p.Content,
+				}
+				content.Parts = append(content.Parts, VertexPart{
+					FunctionResponse: &VertexFunctionResponse{
+						Name:     p.ToolCallID, // Use tool call ID as name for now
+						Response: responseData,
+					},
+				})
+				hasNonTextParts = true
 			case message.ToolCall:
-				// For Vertex, represent tool calls as text (simplified)
-				toolText := fmt.Sprintf("Tool call: %s(%s)", p.Name, p.Input)
-				textBuilder.WriteString(toolText)
+				// Convert tool call to Vertex AI function call format
+				args := make(map[string]interface{})
+				if err := json.Unmarshal([]byte(p.Input), &args); err != nil {
+					// If unmarshaling fails, treat as string
+					args["input"] = p.Input
+				}
+				content.Parts = append(content.Parts, VertexPart{
+					FunctionCall: &VertexFunctionCall{
+						Name: p.Name,
+						Args: args,
+					},
+				})
+				hasNonTextParts = true
 			}
 		}
 
+		// Add text part if there's text
 		if textBuilder.Len() > 0 {
 			content.Parts = append(content.Parts, VertexPart{
 				Text: textBuilder.String(),
 			})
+		}
+
+		// Only add content if it has parts
+		if len(content.Parts) > 0 || hasNonTextParts {
 			contents = append(contents, content)
 		}
 	}
@@ -542,11 +596,41 @@ func (c *FloodgateClient) convertFromVertexResponse(resp *VertexChatResponse) (*
 		}
 	}
 
-	// Extract text content
+	// Extract content from parts
 	var contentBuilder strings.Builder
+	var functionCall *VertexFunctionCall
+
 	for _, part := range candidate.Content.Parts {
-		contentBuilder.WriteString(part.Text)
+		if part.Text != "" {
+			contentBuilder.WriteString(part.Text)
+		}
+		if part.FunctionCall != nil {
+			functionCall = part.FunctionCall
+		}
 	}
+
+	// Handle function calls
+	if functionCall != nil {
+		// Generate a unique ID for the tool call
+		toolCallID := fmt.Sprintf("vertex_call_%d", time.Now().UnixNano())
+
+		// Convert args to JSON string
+		argsJSON, err := json.Marshal(functionCall.Args)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal function call args: %v", err)
+		}
+
+		providerResp.ToolCalls = []message.ToolCall{
+			{
+				ID:    toolCallID,
+				Name:  functionCall.Name,
+				Input: string(argsJSON),
+				Type:  "function",
+			},
+		}
+		providerResp.FinishReason = message.FinishReasonToolUse
+	}
+
 	providerResp.Content = contentBuilder.String()
 
 	return providerResp, nil
@@ -636,6 +720,33 @@ func (c *FloodgateClient) sendVertexRequest(ctx context.Context, messages []mess
 		req.GenerationConfig = &VertexGenerationConfig{
 			MaxOutputTokens: &maxTokens,
 			Temperature:     &temp,
+		}
+	}
+
+	// Convert tools to Vertex AI format
+	if len(tools) > 0 {
+		vertexTools := make([]VertexTool, 0, 1)
+		functionDeclarations := make([]VertexFunctionDeclaration, 0, len(tools))
+
+		for _, tool := range tools {
+			info := tool.Info()
+			params := map[string]interface{}{
+				"type": "object",
+				"properties": info.Parameters,
+				"required": info.Required,
+			}
+			functionDeclarations = append(functionDeclarations, VertexFunctionDeclaration{
+				Name:        info.Name,
+				Description: info.Description,
+				Parameters:  params,
+			})
+		}
+
+		if len(functionDeclarations) > 0 {
+			vertexTools = append(vertexTools, VertexTool{
+				FunctionDeclarations: functionDeclarations,
+			})
+			req.Tools = vertexTools
 		}
 	}
 
